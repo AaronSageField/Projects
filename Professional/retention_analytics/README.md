@@ -1,4 +1,6 @@
 Status: Work in Progress (WIP)
+
+
 The MBOB (Merged Book of Business) Snapshot Generator is a Python-based desktop application designed to assist small Medicare agencies in managing and analyzing carrier book of business reports. Agents selling on behalf of multiple insurance carriers often receive reports in varying formats with inconsistent attributes, making it challenging to consolidate data for analytics. This tool automates the creation of a unified book of business snapshot, reducing manual effort and enabling data-driven insights without requiring a secure database or advanced technical expertise.
 Built with a user-friendly Tkinter interface, the application processes reports from multiple carriers (e.g., UHC, Humana, Devoted, Cigna, Aetna), merges them into a standardized Excel snapshot, and provides functionality for calculating retention rates. Future enhancements will include snapshot comparison, CRM integration, and additional analytics features.
 This project is a work in progress and is being developed to demonstrate my skills in Python, data processing, and UI development while addressing a real-world business problem. Feedback and contributions are welcome!
