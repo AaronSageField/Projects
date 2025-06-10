@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicare Advantage Ad Group Performance Chart</title>
+</head>
+<body>
+  <!-- Canvas element where the chart will be rendered -->
+  <canvas id="myChart" width="400" height="200"></canvas>
+
+  <!-- Include Chart.js from a CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- JavaScript to initialize the chart -->
+  <script>
+    // Get the canvas element
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    // Chart configuration
+    const chartConfig = {
+  type: 'bar',
+  data: {
+    labels: ['$2,000 A', '$5,000 A', '$10,000 A', '$2,000 B', '$5,000 B', '$10,000 B'],
+    datasets: [
+      {
+        label: 'Ad Spend ($)',
+        data: [2000, 5000, 10000, 2000, 5000, 10000],
+        backgroundColor: '#D32F2F'
+      },
+      {
+        label: 'Revenue ($)',
+        data: [392.54, 981.36, 1962.71, 230.50, 576.25, 1152.51],
+        backgroundColor: '#43A047'
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Revenue vs. Ad Spend (AEP, Monthly, ROI: -0.80 CO, -0.90 KS)'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Dollars ($)'
+        }
+      }
+    }
+  }
+};
+
+    // Initialize the chart
+    new Chart(ctx, chartConfig);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+Calculates the duration of a trip in HH:MM

@@ -1,0 +1,1 @@
+Display regional and quarterly sales in local currency

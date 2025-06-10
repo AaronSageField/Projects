@@ -1,0 +1,1 @@
+Simple GUI for making and saving preference changes.

@@ -1,0 +1,1 @@
+Calculates and display cost of tipping @ 15%, 20%, and 25%
