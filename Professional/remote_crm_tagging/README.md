@@ -1,5 +1,3 @@
-CRM Record Updater
-Overview
 The CRM Record Updater is a Python application with a graphical user interface (GUI) that allows users to apply tags to CRM records in bulk via an API. It reads record IDs from a records.txt file and applies specified tags to either Client or Lead records, enabling automated workflows remotely.
 Features
 
