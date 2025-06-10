@@ -6,9 +6,9 @@ const firebaseConfig = {
 	authDomain: "PLACEHOLDER",
 	projectId: ""PLACEHOLDER"",
 	storageBucket: ""PLACEHOLDER"",
-	messagingSenderId: "143816382294",
-	appId: "1:143816382294:web:9a6800e35eae32b06028f7",
-	measurementId: "G-9Z2RB12JJF"
+	messagingSenderId: "PLACEHOLDER",
+	appId: "PLACEHOLDER",
+	measurementId: "PLACEHOLDER"
 };	
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);		
