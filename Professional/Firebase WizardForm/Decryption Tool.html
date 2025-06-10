@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    	<meta charset="UTF-8">
+    	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<title>Decryption Tool</title>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    	<script type="module">
+        	import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+        	import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+        	const firebaseConfig = {
+            		apiKey: PLACEHOLDER
+            		authDomain: "PLACEHOLDER",
+            		projectId: "PLACEHOLDER",
+            		storageBucket: "PLACEHOLDER",
+            		messagingSenderId: "143816382294",
+            		appId: "1:143816382294:web:9a6800e35eae32b06028f7",
+        	};
+        	const app = initializeApp(firebaseConfig);
+        	const db = getFirestore(app);
+        	function decryptData(ciphertext, key) {
+            		try {
+                		const bytes = CryptoJS.AES.decrypt(ciphertext, key);
+                		return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            		} catch (error) {
+                		console.error("Decryption failed:", error);
+                		return null;
+            		}
+        	}
+        	async function fetchAndDisplayData() {
+            		const encryptionKey = {INSERT_PRIVATE_KEY};
+            		const tableBody = document.getElementById("dataBody");
+            		const exportButton = document.getElementById("exportButton");
+            		const decryptedDataArray = [];
+            		try {
+                		tableBody.innerHTML = "";
+                		const querySnapshot = await getDocs(collection(db, "wizardformsubmissions"));
+                		querySnapshot.forEach((doc) => {
+                    			const data = doc.data();
+                    			const decryptedData = decryptData(data.encryptedPayload, encryptionKey);
+                    			if (decryptedData) {
+                        			const rowData = {
+                            				id: doc.id,
+                            				...decryptedData,
+                        			};
+                        			decryptedDataArray.push(rowData);
+                        			const row = document.createElement("tr");
+                        			row.innerHTML = `
+                            				<td>${rowData.id}</td>
+                            				<td>${rowData.rating || "N/A"}</td>
+                            				<td>${rowData.feedback || "N/A"}</td>
+                            				<td>${rowData.name || "Anonymous"}</td>
+                            				<td><button onclick="deleteSubmission('${rowData.id}')">Delete</button></td>
+                        			`;
+                        			tableBody.appendChild(row);
+                    			}
+                		});
+                		if (decryptedDataArray.length === 0) {
+                    			tableBody.innerHTML = `<tr><td colspan="5">No submissions found.</td></tr>`;
+                		}
+                		exportButton.disabled = decryptedDataArray.length === 0;
+                		exportButton.onclick = () => exportToCSV(decryptedDataArray);
+            		} catch (error) {
+                		console.error("Error fetching data:", error);
+                		tableBody.innerHTML = `<tr><td colspan="5">Error fetching data.</td></tr>`;
+            		}
+        	}
+        	async function deleteSubmission(id) {
+            		if (!confirm("Are you sure you want to delete this submission?")) return;
+            		try {
+                		await deleteDoc(doc(db, "wizardformsubmissions", id));
+                		alert("Submission deleted successfully.");
+                		fetchAndDisplayData();
+            		} catch (error) {
+                		console.error("Error deleting document:", error);
+                		alert("Failed to delete submission.");
+            		}
+        	}
+        	window.deleteSubmission = deleteSubmission;
+        	function exportToCSV(data) {
+            		const headers = ["Submission ID", "Rating", "Feedback", "Name"];
+            		const csvRows = [headers.join(",")];
+            		data.forEach((row) => {
+                		csvRows.push(
+                    		[
+                        		row.id || "N/A",
+                        		row.rating || "N/A",
+                        		row.feedback || "N/A",
+                        		row.name || "Anonymous",
+                    		].join(",")
+                	);
+            	});
+            	const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+            	const url = URL.createObjectURL(blob);
+            	const a = document.createElement("a");
+            	a.href = url;
+            	a.download = "submissions.csv";
+            	a.click();
+            	URL.revokeObjectURL(url);
+        	}
+        	window.onload = fetchAndDisplayData;
+    	</script>
+    	<style>
+        	table {
+            		width: 100%;
+            		border-collapse: collapse;
+            		margin-top: 20px;
+        	}
+        	th, td {
+            		border: 1px solid #ddd;
+            		padding: 8px;
+            		text-align: left;
+            		word-wrap: break-word;
+            		white-space: normal;
+        	}
+        	th {
+            		background-color: #f4f4f4;
+        	}
+        	td:nth-child(1) {
+            		width: 12%;
+        	}
+        	td:nth-child(3) {
+            		width: 64%;
+        	}
+        	td:nth-child(4) {
+            		width: 23%;
+        	}
+        	button {
+            		padding: 10px 15px;
+            		font-size: 14px;
+            		cursor: pointer;
+        	}
+        	#headerContainer {
+            		display: flex;
+            		justify-content: space-between;
+            		align-items: center;
+            		margin-bottom: 20px;
+        	}
+        	#exportButton {
+            		padding: 10px 15px;
+            		font-size: 14px;
+            		background-color: #005ea8;
+            		color: #ffffff;
+            		border: none;
+            		cursor: pointer;
+        	}
+        	#exportButton:disabled {
+            		background-color: #cccccc;
+            		cursor: not-allowed;
+        	}
+    	</style>
+</head>
+<body>
+    	<div id="headerContainer">
+        	<h1>Decryption Tool</h1>
+        	<button id="exportButton" disabled>Export to CSV</button>
+    	</div>
+    	<table>
+        	<thead>
+            		<tr>
+                		<th>Submission ID</th>
+                		<th>Rating</th>
+                		<th>Feedback</th>
+                		<th>Name</th>
+                		<th>Action</th>
+            		</tr>
+        	</thead>
+        	<tbody id="dataBody">
+            		<tr>
+                		<td colspan="5">Loading...</td>
+            		</tr>
+        	</tbody>
+    	</table>
+</body>
+</html>

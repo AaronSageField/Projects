@@ -1,0 +1,1 @@
+export const encryptionKey = <INSERT_PUBLIC_KEY>;

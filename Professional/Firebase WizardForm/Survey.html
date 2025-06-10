@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<title>Integrity Insurance</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="icon" href="/favicon.ico">
+    	<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    	<div id="divStep1" class="step active">
+        	<fieldset>
+            		<legend>How was your experience with Integrity Insurance?</legend>
+            		<label for="htmlRating">Rating:</label>
+            		<input type="range" id="htmlRating" name="htmlRating" min="1" max="10" value="5" step="1">
+            		<span id="sliderValue">5</span>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="nextButton1" class="button-right">Next ></button>
+        	</div>
+    	</div>
+    	<div id="divStep2" class="step">
+        	<fieldset>
+            		<legend id="step2header"></legend>
+            		<div class="feedback-container">
+                		<label for="htmlFeedback">Your feedback:</label>
+                		<textarea id="htmlFeedback" name="htmlFeedback" placeholder="Type your feedback here…"></textarea>
+            		</div>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="backButton2" class="button-left">< Back</button>
+            		<button id="nextButton2" class="button-right">Next ></button>
+        	</div>
+    	</div>
+    	<div id="divStep3" class="step">
+        	<fieldset>
+            		<legend>Thank you for sharing your experience!</legend>
+            		<p id="step3prompt"></p>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="backButton3" class="button-left">< Back</button>
+            		<button id="noButton3" class="button-right">No</button>
+            		<button id="yesButton3" class="button-right">Yes</button>
+        	</div>
+    	</div>
+    	<div id="divStep4" class="step">
+        	<fieldset>
+            		<legend>One More Thing!</legend>
+            		<p>Your support means the world to us! If you enjoyed your experience, would you consider leaving a 5-star review on our Google listing? Your kind words help us reach more people and make a bigger difference. Thank you for being amazing!</p>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="backButton4" class="button-left">< Back</button>
+            		<button id="noButton4" class="button-right">No</button>
+            		<button id="yesButton4" class="button-right">Yes</button>
+        	</div>
+    	</div>
+    	<div id="divStep5" class="step">
+        	<fieldset>
+            		<legend>Please enter your name below</legend>
+            		<input type="text" id="htmlName" name="htmlName" placeholder="Type your name here" pattern="^[A-Za-z\s]+$" title="Please enter only alphabets and spaces." required>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="backButton5" class="button-left">< Back</button>
+            		<button id="nextButton5" class="button-right">Next ></button>
+        	</div>
+    	</div>
+    	<div id="divStep6" class="step">
+        	<fieldset>
+            		<legend>Review Your Submission</legend>
+            		<p id="reviewContent"></p>
+        	</fieldset>
+        	<div class="button-container">
+            		<button id="backButton6" class="button-left">< Back</button>
+            		<button id="submitButton6" class="button-right">Submit!</button>
+        	</div>
+    	</div>
+    	<script src="app.js" type="module"></script>
+</body>
+</html>
