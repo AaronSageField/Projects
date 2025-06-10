@@ -1,98 +1,145 @@
-The Integrity Insurance WizardForm is a web-based survey application designed to collect client feedback 24 hours after their appointment. It is automatically distributed via a CRM workflow and uses Firebase for secure data storage with asymmetrical encryption. The form guides users through a multi-step process to gather experience ratings, feedback, and optional names, funneling satisfied clients (rating 7 or higher) toward leaving Google Reviews to maximize positive public feedback while collecting improvement insights from less satisfied clients.
+# Integrity Insurance WizardForm (Client Feedback Survey)
 
-Features
+The Integrity Insurance WizardForm is a web-based survey application designed to collect post-appointment client feedback through an automated CRM workflow. The survey is accessible via a public link sent 24 hours after an appointment and securely stores encrypted responses in Firebase Firestore.
 
-Multi-Step Survey: A user-friendly, step-by-step interface for collecting ratings, feedback, and optional user information.
-Conditional Logic: Users with ratings of 7 or higher are prompted to leave a Google Review, while others are directed to provide feedback for internal improvement.
-Data Security: Utilizes asymmetrical encryption (via CryptoJS AES) to securely store user data in Firebase Firestore.
-Responsive Design: Mobile-friendly interface with CSS media queries for optimal display across devices.
-Accessibility: Supports keyboard navigation (Enter for next, Backspace for previous) and includes ARIA attributes for error handling.
-Firebase Integration: Stores encrypted survey responses in a Firestore database.
-Dynamic Feedback Prompts: Customizes feedback questions based on user ratings (e.g., "What did you like the most?" for high ratings).
+The form adapts to user input using conditional logic, prompting satisfied clients (rating 7 or higher) to leave a Google Review, while collecting internal improvement feedback from less satisfied users. Responses are stored securely using AES encryption via CryptoJS.
 
-File Structure
+## Features
 
-config.js: Contains the encryption key for securing data.
-Survey.html: The main survey interface with a multi-step form for collecting user input.
-Decryption Tool.html: A tool for viewing and exporting decrypted survey submissions to CSV (for internal use).
-styles.css: Styles for the survey and decryption tool, featuring Integrity Insurance branding (e.g., orange borders, blue buttons).
-app.js: Core logic for the survey, including Firebase integration, encryption, step navigation, and input validation.
+- **Multi-Step Survey**  
+  Guided, step-by-step interface for capturing experience ratings, written feedback, and optional contact information.
 
-Setup Instructions
+- **Conditional Logic**  
+  - Ratings ≥ 9: Prompt for Google Review  
+  - Ratings 7–8: Ask what went well and what could improve  
+  - Ratings ≤ 6: Directly request suggestions for improvement
 
-Prerequisites:
+- **Data Security**  
+  - AES encryption via CryptoJS  
+  - All data stored securely in Firebase Firestore
 
-Node.js (for local development, if needed).
-A Firebase project with Firestore enabled.
-Assymetrical encryption keys for data security.
+- **Responsive Design**  
+  Mobile-friendly layout using media queries for clean display across screen sizes.
 
+- **Accessibility**  
+  - ARIA-compliant error handling  
+  - Keyboard navigation (Enter to proceed, Backspace to go back)
 
-Firebase Configuration:
+- **Firebase Integration**  
+  Survey submissions are securely written to a Firestore collection.
 
-Replace placeholders in app.js (firebaseConfig) with your Firebase project credentials (apiKey, authDomain, projectId, etc.).
-Ensure Firestore is enabled in your Firebase console.
+- **Internal Decryption Tool**  
+  A separate admin-only HTML tool for decrypting and exporting collected feedback.
 
+## File Structure
 
-Encryption Key:
+- `Survey.html` – Main form interface with embedded scripts and markup  
+- `styles.css` – UI styling and branding (orange/blue palette)  
+- `app.js` – Survey logic, input validation, Firebase integration, encryption  
+- `config.js` – Public encryption key for securing data before submission  
+- `Decryption Tool.html` – Standalone internal tool for decrypting/exporting data (requires private key)
 
-Insert your public encryption key in config.js where <INSERT_PUBLIC_KEY> is specified. Insert your private encryption key in the Decryption Tool. 
+## Setup Instructions
 
+### Prerequisites
 
-Deployment:
+- Firebase project with Firestore enabled  
+- AES public/private key pair (asymmetric encryption)  
+- Static web hosting environment (e.g., Firebase Hosting, Netlify)
 
-Host the application on a web server (e.g., Firebase Hosting, Netlify, or any static hosting service).
-Update redirect URLs in app.js (submitSurveyNormal and submitSurveyGoogle) to point to your desired destinations (e.g., company website, Google Review page).
+### Firebase Configuration
 
+1. In `app.js`, replace the placeholder `firebaseConfig` object with your project credentials.
+2. Confirm Firestore is enabled in your Firebase console.
+3. Configure Firestore Security Rules to restrict access appropriately.
 
-CRM Integration:
+### Encryption Keys
 
-Configure your CRM to send survey links to clients 24 hours post-appointment using a workflow automation tool.
-Ensure the survey URL points to the hosted Survey.html.
+- In `config.js`, insert your public encryption key in the placeholder.
+- Use the private key within the `Decryption Tool.html` (only in secure environments).
 
+### Hosting
 
-Decryption Tool:
+- Upload `Survey.html`, `styles.css`, `app.js`, and `config.js` to a static host.
+- Ensure links in `app.js` point to your Google Review page and confirmation landing page.
 
-Deploy Decryption Tool.html separately for internal use, ensuring only authorized personnel can access it.
-Implement decryption logic (not provided in the code) to view and export survey data.
+### CRM Integration
 
+- Configure your CRM to send the survey URL 24 hours after each client appointment via automated workflow.
+- Ensure the URL points to the hosted `Survey.html`.
 
+### Decryption Tool
 
-Usage
+- Deploy `Decryption Tool.html` separately in a restricted-access environment.
+- Logic for decrypting AES-encrypted submissions must be implemented internally (not provided in this repo).
+- Tool should export decrypted responses to CSV for analysis or reporting.
 
-Survey Flow:
-Step 1: Users rate their experience (1-10) using a slider.
-Step 2: Users provide feedback based on their rating (e.g., "What can we do to improve?" for ratings 7-8).
-Step 3: Users are asked if they want to be contacted (or thanked for high ratings).
-Step 4 (if rating ≥ 9): Users are prompted to leave a Google Review.
-Step 5 (if contact requested): Users enter their name.
-Step 6: Users review and submit their responses.
+## Survey Flow
 
+1. **Rating (1–10)**  
+   Collected via slider input.
 
-Data Storage: Responses are encrypted and stored in Firestore under the wizardformsubmissions collection.
-Google Review Funnel: Users with ratings ≥ 7 are encouraged to leave a Google Review, increasing 5-star visibility.
-Decryption Tool: Internal tool to decrypt and export submissions to CSV for analysis.
+2. **Feedback Prompt**  
+   Dynamically generated based on rating:
+   - High: "What did you like most?"
+   - Mid-range: "What can we do better?"
+   - Low: "What went wrong?"
 
-Dependencies
+3. **Follow-Up Contact (Optional)**  
+   User asked whether they'd like to be contacted.
 
-Firebase SDK (v9.17.2): For Firestore database and app initialization.
-CryptoJS: For AES encryption of survey data.
-External Hosting: Required for serving HTML, CSS, and JS files.
+4. **Google Review Prompt** (Rating ≥ 9)  
+   Redirects to external review page after submission.
 
-Styling
+5. **Name Input** (If contact requested)  
+   Name collected for follow-up.
 
-Branding: Uses Integrity Insurance colors (orange: #f46c1c, blue: #067797, #005ea8).
-Responsive Design: Adapts to mobile and tablet screens with media queries.
-Accessibility: Includes error messaging with ARIA attributes and keyboard navigation support.
+6. **Review & Submit**  
+   Users confirm all inputs and submit securely.
 
-Security
+## Data Storage
 
-Data Encryption: All survey responses are encrypted using AES before storage in Firestore.
-Input Validation: Ensures valid names (alphabets and spaces only) and feedback length (< 500 characters).
-Firebase Security Rules: Configure Firestore rules to restrict access to authorized users only.
+- Responses are AES-encrypted and stored in the `wizardformsubmissions` collection in Firestore.
+- Each document includes timestamp, rating, feedback, optional name, and follow-up preference.
 
-Notes
+## Dependencies
 
-Replace placeholder URLs in app.js (https://www.placeholder.com/ and https://g.placeholder.com) with actual redirect links.
-The decryption tool (Decryption Tool.html) requires additional logic to decrypt and display data, which is not included in the provided code.
-Ensure Firebase configuration is complete to avoid data storage issues.
-Test the survey flow thoroughly to confirm step navigation and conditional logic work as expected.
+- Firebase SDK (v9.17.2) – App initialization and Firestore  
+- CryptoJS – AES encryption  
+- No backend server required
+
+## Styling
+
+- **Brand Colors**  
+  - Orange: `#f46c1c`  
+  - Light Blue: `#067797`  
+  - Dark Blue: `#005ea8`
+
+- **Responsiveness**  
+  Uses CSS media queries for phone and tablet support.
+
+- **Accessibility**  
+  ARIA attributes for input validation; keyboard support for navigation.
+
+## Security
+
+- **Encryption**  
+  All data is AES-encrypted before storage; only authorized users with the private key can decrypt responses.
+
+- **Validation**  
+  Input constraints enforce alphabetic names and character limits for feedback fields.
+
+- **Access Control**  
+  Firestore rules should be configured to prevent unauthorized access.
+
+## Notes
+
+- Update all placeholder URLs in `app.js`:
+  - Submission redirects
+  - Google Review link
+
+- The decryption tool requires private-key logic not included here.
+
+- This project assumes that only authorized internal personnel will access decrypted survey data.
+
+- Test survey logic thoroughly before deployment to ensure proper branching, validation, and redirect behavior.
