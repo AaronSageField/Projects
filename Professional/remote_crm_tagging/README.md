@@ -1,70 +1,74 @@
-The CRM Record Updater is a Python application with a graphical user interface (GUI) that allows users to apply tags to CRM records in bulk via an API. It reads record IDs from a records.txt file and applies specified tags to either Client or Lead records, enabling automated workflows remotely.
-Features
+# CRM Tagging Utility (Desktop GUI)
 
-GUI Interface: Built with Tkinter for easy record type selection and tag input.
-Bulk Processing: Processes multiple record IDs from a records.txt file.
-API Integration: Sends PATCH requests to a CRM API to update records with tags.
-Error Handling: Validates input file format and displays API response errors.
-Scalable Output: Displays detailed logs of API responses and errors in a scrollable text area.
+This lightweight Python application allows users to apply tags in bulk to CRM records via API with a minimal, single-screen interface. Built to support teams with no IT infrastructure, the tool simplifies a previously manual, multi-hour process into a one-click workflow.
 
-Prerequisites
+## Overview
 
-Python 3.6 or higher
-Required Python packages (see requirements.txt)
-A valid API token for the CRM system
-Access to the CRM API endpoint
+Due to limitations in the CRM's API (no bulk endpoint, no GUI), staff previously had to apply tags individually through the platform. This tool automates the process with a focus on:
 
-Installation
+- Minimal user input: one tag, one button
+- Support for both Client and Lead record types
+- Compatibility with manually exported CRM data
 
-Clone or download this repository to your local machine.
-Install the required Python packages by running:pip install -r requirements.txt
+## Features
 
+- Record type selection (Client / Lead)
+- Free-text tag entry field
+- Paste-in support using a text file (`records.txt`)
+- Scrolled output field for status and error messages
+- Input validation to ensure format compatibility with the CRM’s API
+- Graceful handling of missing files and bad inputs
 
-Ensure a records.txt file exists in the same directory as the script (see Input File Format below).
+## How It Works
 
-Input File Format
-The program reads record IDs from a records.txt file. The file must contain a comma-separated list of record IDs enclosed in double quotes, e.g.:
-"id1","id2","id3"
+1. **Paste Record IDs**
+   - Open `records.txt`
+   - Paste CRM record IDs in the following format:  
+     `"id1", "id2", "id3"`
+   - Save and close the file
 
-To generate this format from a CRM report in Excel, use the following formula:
-=TEXTJOIN(", ", TRUE, CHAR(34) & A1:A9999 & CHAR(34))
+2. **Run the Application**
+   - Launch the script via Python (`python remote_crm_tagging.py`)
 
-Copy the output to records.txt.
-Configuration
-Update the following variables in remote_crm_tagging.py with your CRM API details:
+3. **Use the GUI**
+   - Choose record type: `Client` or `Lead`
+   - Enter the tag name exactly as it exists in the CRM
+   - Click **Apply Now**
 
-self.api_token: Replace 'example' with your actual API token.
-self.base_url: Replace 'example' with the CRM API endpoint URL.
+4. **Review Output**
+   - The bottom text window will show:
+     - Status codes
+     - Any API error messages
+     - Which IDs were processed successfully
 
-Example:
-self.api_token = 'your_actual_api_token'
-self.base_url = 'https://api.yourcrm.com/v1/records'
+## Requirements
 
-Usage
+- Python 3.6+
+- Internet access to reach the CRM API
+- Valid API credentials (update `api_token` and `base_url` in the script)
+- pip install requests
 
-Run the script:python remote_crm_tagging.py
+## Deployment Notes
 
+- This tool is designed for operational teams with minimal technical background.
+- It requires no installation, but assumes access to Python and basic file navigation.
+- For teams unfamiliar with filesystem structure, a shortcut to `records.txt` and the script may be pinned in a shared folder (e.g., OneDrive).
 
-The GUI will open:
-Select the record type (Client or Lead).
-Enter the desired tag in the "Tag" field (default is "Test").
-Click "Apply Now" to process the updates.
+## Limitations
 
+- Does not create tags or workflows in the CRM; those must already exist
+- Assumes all records in `records.txt` belong to the selected type
+- No progress bar (output is printed to the console window)
 
-View the results in the output text area, which shows the API response codes and any errors for each record ID.
+## Next Steps
 
-Notes
+This tool was developed to address a narrow but high-friction process. Future plans may include:
 
-If records.txt is missing, the program will create an empty one and prompt you to add record IDs.
-Invalid record ID formats or API errors (e.g., HTTP 400/422 for invalid tags) will be displayed in red in the output area.
-Ensure your API token and endpoint are correctly configured to avoid authentication errors.
+- Adding drag-and-drop support for importing IDs
+- Dropdown for recently used tags
+- Version packaged as `.exe` for teams without Python
 
-Troubleshooting
+---
 
-FileNotFoundError: Ensure records.txt exists in the same directory as the script.
-Invalid format in records.txt: Verify the file follows the required format ("id1","id2","id3").
-API errors: Check the API token, endpoint URL, and network connectivity.
-GUI issues: Ensure Tkinter is installed (included with standard Python installations).
+For questions or implementation support, please contact the developer or consult your agency's internal documentation.
 
-Dependencies
-See requirements.txt for a list of required Python packages.
