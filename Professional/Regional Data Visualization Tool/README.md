@@ -1,80 +1,106 @@
-This project is an interactive US map designed to visualize the states where a company is licensed, display the number of available agents in each state, and redirect users to dynamic agent listings upon clicking a state. The map is built using HTML, CSS, and JavaScript, with an SVG-based map interface for interactivity.
-Features
+# Interactive US Agent Map
 
-Interactive Map: Displays a clickable SVG map of the United States.
-State Licensing Visualization: States are styled to indicate licensing status (enabled or disabled).
-Agent Count Display: Shows the number of available agents in each state via hover tooltips and a list view.
-Dynamic Redirection: Clicking a licensed state redirects users to a dynamic listing of agents for that state.
-Responsive Design: Adapts to various screen sizes for optimal viewing on desktop and mobile devices.
-List View: Provides an alternative list-based interface for users to access state-specific agent listings.
+This project is a browser-based interactive map of the United States designed to help users quickly identify licensed states, view agent availability, and navigate to dynamic agent listings. The map is built using HTML, CSS, and JavaScript with an embedded SVG interface for interactive functionality. It is self-contained and requires no external libraries or frameworks.
 
-Technologies Used
+## Features
 
-HTML5: Structures the map and list view components.
-CSS3: Styles the map, tooltips, and list view for a polished user experience.
-JavaScript: Handles interactivity, including hover effects, click events, and dynamic state data rendering.
-SVG: Utilizes Scalable Vector Graphics for the US map, ensuring crisp visuals and precise click detection.
-jQuery: Simplifies DOM manipulation and event handling (assumed from common practices in similar projects).
+- **Interactive SVG Map**  
+  Clickable map of the United States with built-in interactivity and dynamic styling.
 
-File Structure
+- **State Licensing Visualization**  
+  Licensed states appear active and clickable; unlicensed states are visually disabled and non-interactive.
 
-Map.HTML: The main file containing the HTML structure, CSS styles, SVG map, and JavaScript logic for the interactive map.
-stateData: A JavaScript object within Map.HTML that defines state-specific data, including:
-fullName: Full name of the state.
-title: Display title for the state.
-longDescription: HTML content showing the number of available agents.
-linkUrl: URL for redirecting to the state's agent listing.
-isDisabled: Boolean indicating if the state is unlicensed (disables interactivity).
-overrideFill and overrideHoverFill: Optional custom fill colors for states.
-Other properties for styling and interactivity.
+- **Agent Count Display**  
+  Displays the number of available agents per state via:
+  - Tooltips on map hover
+  - A scrollable list view beneath the map
 
-Host the File:
-Place Map.HTML in a web server directory (e.g., Apache, Nginx, or a local development server like http-server).
-Alternatively, open Map.HTML directly in a browser for testing (note: some features may require a server due to CORS or dynamic content).
+- **Dynamic Redirection**  
+  Clicking on a licensed state navigates to a custom URL with agent listings specific to that state.
 
-Dependencies:
-No external dependencies are required, as the map is self-contained within Map.HTML.
-Ensure a modern browser (Chrome, Firefox, Safari, Edge) for full compatibility.
+- **Responsive Design**  
+  Layout adjusts for desktop and mobile screen sizes.
 
-Usage
+- **List View**  
+  Provides a text-based alternative for accessing agent listings, useful for accessibility and smaller screens.
 
-Viewing the Map:
-Open Map.HTML in a web browser to display the interactive US map.
-Hover over a state to view a tooltip with the state name and number of available agents.
-Click a licensed state (non-grayed) to navigate to the corresponding agent listing page.
+## Technologies Used
 
-List View:
-Scroll below the map to see a list of states with available agents.
-Click a state name to access the agent listing for that state.
+- **HTML5** – Structural layout for the map, tooltip, and list view
+- **CSS3** – Styling for map states, tooltips, and responsiveness
+- **JavaScript** – Logic for hover effects, click handling, and dynamic rendering of state data
+- **SVG** – Scalable Vector Graphics map for pixel-perfect interactions
+- **jQuery** (optional/assumed) – Used for simplified DOM manipulation, if present
 
-Customization:
-Update the stateData object in the JavaScript section of Map.HTML to modify:
-Licensing status (isDisabled).
-Agent counts (longDescription).
-Redirect URLs (linkUrl).
+## File Structure
 
-Adjust CSS styles in the <style> section to customize appearance (e.g., colors, tooltip design).
+- **Map.HTML** – Single file containing:
+  - SVG map markup
+  - `stateData` object for per-state configuration
+  - All inline CSS and JavaScript logic
 
-Example State Data
+## State Data Configuration
+
+The `stateData` object contains information for each state, including:
+
+```javascript
 "FL": {
-    "fullName": "Florida",
-    "title": "Florida",
-    "description": null,
-    "longDescription": "<div style=\"text-align: center;\">\n  Available agents: 6\n</div>",
-    "linkUrl": "https://placeholder.com/map/fl",
-    "isDisabled": false,
-    "isHovering": false,
-    "cssClass": null,
-    "overrideFill": "#000000",
-    "overrideFillEnabled": false,
-    "overrideHoverFill": "#000000",
-    "overrideHoverFillEnabled": false,
-    "overridePopLink": null
+  "fullName": "Florida",
+  "title": "Florida",
+  "longDescription": "<div style=\"text-align: center;\">Available agents: 6</div>",
+  "linkUrl": "https://placeholder.com/map/fl",
+  "isDisabled": false,
+  "overrideFill": "#000000",
+  "overrideFillEnabled": false,
+  "overrideHoverFill": "#000000",
+  "overrideHoverFillEnabled": false
 }
+```
 
-Styling
+### Key Properties
 
-Enabled States: Fully interactive with a default fill color and hover effects.
-Disabled States: Grayed out (via CSS or overrideFill) and non-clickable.
-Tooltips: Display state name and agent count on hover, styled with a white background, shadow, and rounded corners.
-List View: Centered, with clickable links for licensed states and visual indicators for agent availability.
+- `fullName`: Full state name
+- `title`: Display title on map hover
+- `longDescription`: HTML snippet for tooltip or list view
+- `linkUrl`: Destination URL when clicked
+- `isDisabled`: Boolean to disable interactivity for unlicensed states
+- `overrideFill` / `overrideHoverFill`: Optional custom fill colors
+
+## Usage Instructions
+
+### View the Map
+
+1. Open `Map.HTML` in a modern web browser (Chrome, Firefox, Edge, Safari).
+2. Hover over a state to see its name and agent count.
+3. Click on a licensed (enabled) state to be redirected to its listing page.
+
+### List View
+
+Scroll below the map to view a full list of licensed states and available agent counts. Clicking a state name navigates to the corresponding agent listing.
+
+## Hosting
+
+- For production use, place `Map.HTML` on a web server (Apache, Nginx, or static host).
+- For development/testing, it may be opened locally, but note that certain dynamic features (like remote data or CORS-restricted links) may not work outside a server context.
+
+## Customization
+
+To change licensing status, agent counts, or redirect behavior:
+
+1. Edit the `stateData` object within the `<script>` block in `Map.HTML`.
+2. To customize colors or tooltip styles, modify the `<style>` block.
+
+## Styling Guidelines
+
+- **Enabled States**: Fully interactive with hover effects
+- **Disabled States**: Grayed out and non-clickable
+- **Tooltips**: Show on hover, styled with a light background, border radius, and drop shadow
+- **List View**: Centered and scrollable, with clickable links for each state
+
+## Dependencies
+
+None required. This map is fully self-contained and does not rely on external JavaScript or CSS files.
+
+## Compatibility
+
+Tested in modern browsers. For best performance and interactivity, use an up-to-date version of Chrome, Firefox, Safari, or Edge.
