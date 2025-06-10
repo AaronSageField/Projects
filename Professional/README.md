@@ -1,1 +1,0 @@
-A small collection of Chart.JS files I've produced for analytics reports at Integrity Insurance, LLC.
