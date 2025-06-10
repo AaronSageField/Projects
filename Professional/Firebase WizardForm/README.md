@@ -1,6 +1,5 @@
-Integrity Insurance WizardForm
-Overview
 The Integrity Insurance WizardForm is a web-based survey application designed to collect client feedback 24 hours after their appointment. It is automatically distributed via a CRM workflow and uses Firebase for secure data storage with asymmetrical encryption. The form guides users through a multi-step process to gather experience ratings, feedback, and optional names, funneling satisfied clients (rating 7 or higher) toward leaving Google Reviews to maximize positive public feedback while collecting improvement insights from less satisfied clients.
+
 Features
 
 Multi-Step Survey: A user-friendly, step-by-step interface for collecting ratings, feedback, and optional user information.
@@ -25,7 +24,7 @@ Prerequisites:
 
 Node.js (for local development, if needed).
 A Firebase project with Firestore enabled.
-A public encryption key for data security.
+Assymetrical encryption keys for data security.
 
 
 Firebase Configuration:
@@ -36,7 +35,7 @@ Ensure Firestore is enabled in your Firebase console.
 
 Encryption Key:
 
-Insert your public encryption key in config.js where <INSERT_PUBLIC_KEY> is specified.
+Insert your public encryption key in config.js where <INSERT_PUBLIC_KEY> is specified. Insert your private encryption key in the Decryption Tool. 
 
 
 Deployment:
