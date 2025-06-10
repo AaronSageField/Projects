@@ -49,14 +49,6 @@ Click Calculate Retention Rates to analyze historical snapshots and generate a r
 The Consolidate Commission Statements feature is a placeholder and not yet implemented.
 Logs and errors are displayed in the UI's text area.
 
-Project Structure
-mbob-snapshot-generator/
-├── ui.py                # Tkinter GUI and main application logic
-├── business.py          # Core data processing and business logic
-├── Reports/             # Input folder for carrier reports
-├── Snapshots/           # Output folder for generated snapshots
-└── Program Data/        # Storage for processed data files
-
 Current Limitations
 
 WIP Status: The project is under active development and not production-ready.
