@@ -96,6 +96,3 @@ Replace placeholder URLs in app.js (https://www.placeholder.com/ and https://g.p
 The decryption tool (Decryption Tool.html) requires additional logic to decrypt and display data, which is not included in the provided code.
 Ensure Firebase configuration is complete to avoid data storage issues.
 Test the survey flow thoroughly to confirm step navigation and conditional logic work as expected.
-
-Contact
-For issues or inquiries, contact Integrity Insurance at (720) 990-1680.
