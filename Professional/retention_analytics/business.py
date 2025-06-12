@@ -387,12 +387,11 @@ def generate_mbob_snapshot(snapshots_folder, data_folder, reports):
     print(f'Success!\nSnapshot_{today}.xlsx can be found in the "Snapshots" folder.')
 
 def consolidate_commission_statements():
-    print('\033[91mNot available in sample.\n\033[0m')
+    print('Not available in sample.\n')
 
 def calculate_retention_rates(root_directory):
     data_folder = find_data_folder(root_directory)
     snapshot_files = []
-    # Identify snapshot files by naming convention
     for file_name in os.listdir(data_folder):
         if file_name.startswith('Snapshot_') and file_name.endswith('.xlsx'):
             match = re.match(r'Snapshot_(\d{4}-\d{2}-\d{2})\.xlsx', file_name)
@@ -402,12 +401,9 @@ def calculate_retention_rates(root_directory):
                     'location': os.path.join(data_folder, file_name),
                     'date': match.group(1)
                 })
-    
     if not snapshot_files:
         print("No snapshot files found in the Program Data folder.")
         return
-    
-    # Extract years and months
     months_data = {}
     for snapshot in snapshot_files:
         date_str = snapshot['date']
@@ -416,7 +412,6 @@ def calculate_retention_rates(root_directory):
             year = date_obj.strftime('%Y')
             month = date_obj.strftime('%m')
             mmyyyy = date_obj.strftime('%m%Y')
-            
             if mmyyyy not in months_data:
                 months_data[mmyyyy] = {
                     'Name': mmyyyy,
@@ -426,36 +421,23 @@ def calculate_retention_rates(root_directory):
                     'Client Count': 0,
                     'Files': []
                 }
-            
             months_data[mmyyyy]['Count'] += 1
             months_data[mmyyyy]['Files'].append(snapshot['location'])
-            
-            # Read the spreadsheet to get row count (excluding header)
             df = pandas.read_excel(snapshot['location'], engine='openpyxl')
-            months_data[mmyyyy]['Client Count'] += len(df)  # Excludes header by default
-            
+            months_data[mmyyyy]['Client Count'] += len(df)
         except ValueError:
             continue
-    
-    # Calculate average Client Count for each MMYYYY
     for mmyyyy in months_data:
         count = months_data[mmyyyy]['Count']
         if count > 0:
             months_data[mmyyyy]['Client Count'] = round(months_data[mmyyyy]['Client Count'] / count, 2)
-    
-    # Create a list of unique years
     years = sorted(set(data['Year'] for data in months_data.values()))
     months = [f'{m:02d}' for m in range(1, 13)]
-    
-    # Initialize the retention rate DataFrame
     retention_data = pandas.DataFrame(index=months, columns=years + ['Annual Retention'])
     retention_data.index.name = 'Month'
-    
-    # Calculate monthly retention rates
     sorted_months = sorted(months_data.keys())
     for i, mmyyyy in enumerate(sorted_months):
         current_count = months_data[mmyyyy]['Client Count']
-        # Find the last non-null month before the current one
         for prev_mmyyyy in sorted_months[:i][::-1]:
             prev_count = months_data[prev_mmyyyy]['Client Count']
             if prev_count > 0:
@@ -464,8 +446,6 @@ def calculate_retention_rates(root_directory):
                 month = months_data[mmyyyy]['Month']
                 retention_data.loc[month, year] = round(retention_rate, 2)
                 break
-    
-    # Calculate annual retention rate
     if sorted_months:
         oldest_mmyyyy = sorted_months[0]
         newest_mmyyyy = sorted_months[-1]
@@ -474,8 +454,6 @@ def calculate_retention_rates(root_directory):
         if oldest_count > 0:
             annual_retention = (newest_count / oldest_count) * 100
             retention_data['Annual Retention'] = round(annual_retention, 2)
-    
-    # Save the retention rates to a spreadsheet
     output_path = os.path.join(root_directory, 'Retention_Rates.xlsx')
     retention_data.to_excel(output_path, engine='openpyxl')
     print(f"Retention rates saved to {output_path}")
@@ -506,7 +484,7 @@ def define_data(data_folder):
 def define_spreadsheets(reports_folder):
     global REPORTS_POPULATED
     global CS_POPULATED
-    global CRM_POPULATED Nostalgic
+    global CRM_POPULATED
     reports = []
     spreadsheets_found = []
     to_convert = []

@@ -1,150 +1,105 @@
 import os
-import sys
-import threading
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
-import business
+from tkinter import ttk, scrolledtext
+import sys
+from io import StringIO
+from business import (
+    define_spreadsheets,
+    generate_mbob_snapshot,
+    consolidate_commission_statements,
+    calculate_retention_rates,
+    find_data_folder,
+    find_snapshots_folder,
+    find_reports_folder
+)
 
-class RedirectText: 
+class PrintRedirector:
     def __init__(self, text_widget):
         self.text_widget = text_widget
 
-    def write(self, text):
-        self.text_widget.configure(state='normal')
-        self.text_widget.insert(tk.END, text)
-        self.text_widget.configure(state='disabled')
+    def write(self, message):
+        self.text_widget.insert(tk.END, message)
         self.text_widget.see(tk.END)
+        self.text_widget.update()
 
     def flush(self):
         pass
 
-class MBOSnapshotApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("MBOB Snapshot Generator")
-        self.geometry("800x600")
+class BusinessGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Business Management System")
+        self.root_directory = os.getcwd()
 
-        # Main frame
-        main_frame = ttk.Frame(self)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Configure main window
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=1)
+
+        # Create main frame
+        self.main_frame = ttk.Frame(self.root, padding="10")
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.main_frame.columnconfigure(0, weight=1)
+        self.main_frame.rowconfigure(1, weight=1)
 
         # Button frame
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(side=tk.TOP, pady=(0, 10))
+        self.button_frame = ttk.Frame(self.main_frame)
+        self.button_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=5)
+        self.button_frame.columnconfigure((0, 1, 2), weight=1)
 
-        # Generate Snapshot Button
-        self.generate_btn = ttk.Button(button_frame, text="Generate Snapshot", command=self._on_generate)
-        self.generate_btn.pack(side=tk.LEFT, padx=5)
+        # Buttons
+        ttk.Button(
+            self.button_frame,
+            text="Generate Snapshot",
+            command=self.run_generate_snapshot
+        ).grid(row=0, column=0, padx=5, sticky=(tk.W, tk.E))
+        
+        ttk.Button(
+            self.button_frame,
+            text="Generate CCS",
+            command=self.run_consolidate_commission
+        ).grid(row=0, column=1, padx=5, sticky=(tk.W, tk.E))
+        
+        ttk.Button(
+            self.button_frame,
+            text="Calc Retention Rates",
+            command=self.run_calculate_retention
+        ).grid(row=0, column=2, padx=5, sticky=(tk.W, tk.E))
 
-        # Consolidate Commission Statements Button
-        self.consolidate_btn = ttk.Button(button_frame, text="Consolidate Commission Statements", command=self._on_consolidate)
-        self.consolidate_btn.pack(side=tk.LEFT, padx=5)
+        # Output window
+        self.output_text = scrolledtext.ScrolledText(
+            self.main_frame,
+            wrap=tk.WORD,
+            height=20,
+            font=("Courier", 10)
+        )
+        self.output_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
 
-        # Calculate Retention Rates Button
-        self.retention_btn = ttk.Button(button_frame, text="Calculate Retention Rates", command=self._on_retention)
-        self.retention_btn.pack(side=tk.LEFT, padx=5)
+        # Redirect print statements
+        sys.stdout = PrintRedirector(self.output_text)
 
-        # Output log area
-        self.log_area = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, state='disabled')
-        self.log_area.pack(fill=tk.BOTH, expand=True)
+        # Initialize folders after GUI setup
+        self.initialize_folders()
 
-        # Redirect stdout and stderr
-        sys.stdout = RedirectText(self.log_area)
-        sys.stderr = RedirectText(self.log_area)
+    def initialize_folders(self):
+        """Initialize folders and display creation messages in output window."""
+        self.reports_folder = find_reports_folder(self.root_directory)
+        self.snapshots_folder = find_snapshots_folder(self.root_directory)
+        self.data_folder = find_data_folder(self.root_directory)
 
-    def _on_generate(self):
-        self.generate_btn.config(state=tk.DISABLED)
-        self.consolidate_btn.config(state=tk.DISABLED)
-        self.retention_btn.config(state=tk.DISABLED)
-        self.log_area.configure(state='normal')
-        self.log_area.delete('1.0', tk.END)
-        self.log_area.configure(state='disabled')
-        threading.Thread(target=self._run_generation, daemon=True).start()
+    def run_generate_snapshot(self):
+        self.output_text.delete(1.0, tk.END)
+        reports = define_spreadsheets(self.reports_folder)
+        generate_mbob_snapshot(self.snapshots_folder, self.data_folder, reports)
 
-    def _on_consolidate(self):
-        self.generate_btn.config(state=tk.DISABLED)
-        self.consolidate_btn.config(state=tk.DISABLED)
-        self.retention_btn.config(state=tk.DISABLED)
-        self.log_area.configure(state='normal')
-        self.log_area.delete('1.0', tk.END)
-        self.log_area.configure(state='disabled')
-        threading.Thread(target=self._run_consolidate, daemon=True).start()
+    def run_consolidate_commission(self):
+        self.output_text.delete(1.0, tk.END)
+        consolidate_commission_statements()
 
-    def _on_retention(self):
-        self.generate_btn.config(state=tk.DISABLED)
-        self.consolidate_btn.config(state=tk.DISABLED)
-        self.retention_btn.config(state=tk.DISABLED)
-        self.log_area.configure(state='normal')
-        self.log_area.delete('1.0', tk.END)
-        self.log_area.configure(state='disabled')
-        threading.Thread(target=self._run_retention, daemon=True).start()
+    def run_calculate_retention(self):
+        self.output_text.delete(1.0, tk.END)
+        calculate_retention_rates(self.root_directory)
 
-    def _run_generation(self):
-        try:
-            root_directory = os.getcwd()
-            reports_folder = business.find_reports_folder(root_directory)
-            snapshots_folder = business.find_snapshots_folder(root_directory)
-            data_folder = business.find_data_folder(root_directory)
-
-            print('Validating report data...')
-            reports = business.define_spreadsheets(reports_folder)
-            required = ['UHC Book of Business',
-                        'Humana Book of Business',
-                        'Devoted Book of Business',
-                        'Cigna Book of Business',
-                        'Aetna Book of Business']
-
-            # Collect which required reports are actually present
-            found = [r['name'] for r in reports if r['name'] in required]
-
-            # If fewer than two, show error and abort
-            if len(found) < 2:
-                missing = set(required) - set(found)
-                messagebox.showerror("Insufficient Reports",
-                                     (f"At least two of the following reports are required: {', '.join(required)}.\n"
-                                      f"Found only {len(found)}: {', '.join(found) or 'none'}.\n"
-                                      "Please add more report files and try again."
-                                      )
-                                     )
-                return
-            print('Validating snapshot data...')
-            data = business.define_data(data_folder)
-
-            business.generate_mbob_snapshot(snapshots_folder, data_folder, reports)
-            messagebox.showinfo("Success", "Snapshot generation complete!")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred:\n{e}")
-        finally:
-            # Re-enable buttons
-            self.generate_btn.config(state=tk.NORMAL)
-            self.consolidate_btn.config(state=tk.NORMAL)
-            self.retention_btn.config(state=tk.NORMAL)
-
-    def _run_consolidate(self):
-        try:
-            business.consolidate_commission_statements()
-            messagebox.showinfo("Success", "Commission statements consolidation complete!")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred:\n{e}")
-        finally:
-            # Re-enable buttons
-            self.generate_btn.config(state=tk.NORMAL)
-            self.consolidate_btn.config(state=tk.NORMAL)
-            self.retention_btn.config(state=tk.NORMAL)
-
-    def _run_retention(self):
-        try:
-            root_directory = os.getcwd()
-            business.calculate_retention_rates(root_directory)
-            messagebox.showinfo("Success", "Retention rates calculation complete!")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred:\n{e}")
-        finally:
-            # Re-enable buttons
-            self.generate_btn.config(state=tk.NORMAL)
-            self.consolidate_btn.config(state=tk.NORMAL)
-            self.retention_btn.config(state=tk.NORMAL)
-
-if __name__ == '__main__':
-    app = MBOSnapshotApp()
-    app.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = BusinessGUI(root)
+    root.mainloop()
