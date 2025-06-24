@@ -1,8 +1,8 @@
 # User Guide – Medicare Agent Analytics Tool (MVP)
 
 **Version:** 1.0  
-**Last Updated:** [Insert Date]  
-**Created by:** [Your Name]
+**Last Updated:** 06/24/2025 
+**Created by:** Aaron Sage Field
 
 ---
 
