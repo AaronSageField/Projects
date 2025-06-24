@@ -30,7 +30,6 @@ This project is a browser-based interactive map of the United States designed to
 - **CSS3** – Styling for map states, tooltips, and responsiveness
 - **JavaScript** – Logic for hover effects, click handling, and dynamic rendering of state data
 - **SVG** – Scalable Vector Graphics map for pixel-perfect interactions
-- **jQuery** (optional/assumed) – Used for simplified DOM manipulation, if present
 
 ## File Structure
 
