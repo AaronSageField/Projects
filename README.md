@@ -1,14 +1,19 @@
-## Hi, I'm Sage 👋
+## About Me
 
-I'm an Economics & CIS graduate with real-world experience as the lone data and ops analyst inside a regulated, four-person business.
+Hi, I'm Sage Field.
 
-I build solutions where none exist — HIPAA-compliant feedback tools, retention analytics engines, CRM automation, and strategic marketing pivots based on real cost modeling.
+I'm an Economics and Computer Information Systems graduate with hands-on experience as the sole data and operations analyst within a regulated, four-person Medicare agency.
 
-Here’s a sample of what I’ve done:
+I specialize in building solutions where none previously existed—whether that means developing HIPAA-compliant feedback tools, designing retention analytics engines, automating CRM workflows, or reframing marketing strategies based on real cost modeling and statistical insight.
 
-- **Retention Snapshot Tool** – Python script for cleaning and unifying multi-carrier Excel data
-- **CRM Auto-Tagger** – GUI app that applies tags via CRM API to reduce hours of manual work
-- **Feasibility Study** – Strategic report analyzing why Google Ads campaigns weren't worth the spend
-- **Feedback Web App** – Firebase tool that encrypts feedback and boosts verified reviews by 950%
+Some examples of my work include:
 
-Open to roles in Minnesota or remote. My LinkedIn: (https://www.linkedin.com/in/sage-field-7b6041369/)
+- The **Retention Snapshot Tool**, a Python-based solution that standardizes and unifies multi-carrier Excel data for retention analysis.
+- A **CRM Auto-Tagger**, a GUI application that interacts with a CRM API to automatically apply workflow-specific tags, saving hours of manual effort.
+- A **Feasibility Study** that restructured a flawed Google Ads proposal into a clear, cost-based argument against digital spend.
+- A **Feedback Web App** built with Firebase that encrypts client responses and increased verified reviews by 950%.
+
+I'm currently open to roles in Minnesota or fully remote positions.
+
+[View my LinkedIn profile](https://www.linkedin.com/in/sage-field-7b6041369/)
+
