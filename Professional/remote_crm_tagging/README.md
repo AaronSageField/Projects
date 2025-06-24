@@ -66,9 +66,6 @@ This tool was developed to address a narrow but high-friction process. Future pl
 
 - Adding drag-and-drop support for importing IDs
 - Dropdown for recently used tags
-- Version packaged as `.exe` for teams without Python
 
 ---
-
-For questions or implementation support, please contact the developer or consult your agency's internal documentation.
 
