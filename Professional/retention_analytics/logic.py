@@ -453,37 +453,25 @@ def compare_data():
 
 def view_analytics():
     permission_errors = {'state': False}
-    directories = [
-        {'name': 'Program Data', 'found': False, 'location': None}
-    ]
-
-    # Find Program Data directory
-    find_data_directory(directories, permission_errors)
-    if permission_errors['state']:
-        print("Permission Error encountered while accessing Program Data directory.\n"
-              + "Please run the program with administrator privileges and try again.")
-        return
-    if not directories[0]['found']:
-        print("Program Data directory not found.\n"
-              + "Please ensure the directory exists and try again.")
-        return
-
-    data_dir = directories[0]['location']
-
-    # Scan for snapshot and ccs files
+    
+    # Use the directory of logic.py (Program Data) as the data directory
+    data_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Scan for snapshot and CCS files in Program Data
     snapshot_files = [f for f in os.listdir(data_dir) if f.startswith('snapshot_')]
     ccs_files = [f for f in os.listdir(data_dir) if f.startswith('ccs_')]
     
-    # Check which data types have sufficient files
+    # Debug: Log detected files
+    print(f"Detected snapshot files: {snapshot_files}")
+    print(f"Detected CCS files: {ccs_files}")
+
     snapshot_valid = len(snapshot_files) >= 2
-    ccs_valid = len(ccs_files) >= 2
+    ccs_valid = len(ccs_files) >= 1
 
     if not (snapshot_valid or ccs_valid):
-        print("At least two snapshot or two CCS files are required for analytics.\n"
-              + "Please generate more snapshots or CCS files and try again.")
+        print("At least two snapshot files or one CCS file required for analytics.")
         return
 
-    # Prepare for file processing
     temp_files = []
     analytics_data = []
     try:
@@ -491,21 +479,27 @@ def view_analytics():
         for file in snapshot_files + ccs_files:
             original_path = os.path.join(data_dir, file)
             temp_path = os.path.join(data_dir, f"{file}.xlsx")
-            os.rename(original_path, temp_path)
-            temp_files.append((file, temp_path))
+            try:
+                os.rename(original_path, temp_path)
+                temp_files.append((file, temp_path))
+            except Exception as e:
+                print(f"Error renaming {file}: {str(e)}")
+                continue
 
-        # Process snapshot files for client counts if valid
+        # Process snapshot files for client counts
         if snapshot_valid:
             for file, temp_path in [(f, t) for f, t in temp_files if f.startswith('snapshot_')]:
                 try:
                     df = pd.read_excel(temp_path, dtype=str).fillna('')
                     match = re.search(r'(\d{8})', file)
                     if not match:
+                        print(f"Skipping {file}: Invalid date format")
                         continue
                     date_str = match.group(1)
                     try:
                         file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
                     except ValueError:
+                        print(f"Skipping {file}: Invalid date {date_str}")
                         continue
 
                     client_count = len(df)
@@ -513,133 +507,192 @@ def view_analytics():
                         'date': file_date,
                         'client_count': client_count,
                         'filename': file,
-                        'commission_sum': 0  # Placeholder
+                        'commission_sum': None  # Use None for missing commission data
                     })
                 except Exception as e:
-                    print("Error", f"Error reading snapshot {file}: {str(e)}")
+                    print(f"Error reading snapshot {file}: {str(e)}")
                     continue
 
-        # Process CCS files for commission sums if valid
+        # Process CCS files for commission sums
         commission_changes = []
         if ccs_valid:
-            num_ccs_files = len([f for f in ccs_files])
-            latest_ccs_file = max(
-                [f for f, t in temp_files if f.startswith('ccs_')],
-                key=lambda f: re.search(r'(\d{8})', f).group(1) if re.search(r'(\d{8})', f) else '0',
-                default=None
-            )
-            latest_ccs_path = os.path.join(data_dir, f"{latest_ccs_file}.xlsx") if latest_ccs_file else None
-
-            # Calculate Aetna's per-file contribution
-            aetna_per_file = 0
-            if latest_ccs_path and num_ccs_files > 0:
-                try:
-                    df_latest = pd.read_excel(latest_ccs_path, dtype=str).fillna('0')
-                    if 'YTD paid' in df_latest.columns:
-                        aetna_ytd_sum = pd.to_numeric(df_latest['YTD paid'], errors='coerce').fillna(0).sum()
-                        aetna_per_file = aetna_ytd_sum / num_ccs_files
-                except Exception as e:
-                    print("Error", f"Error reading latest CCS file {latest_ccs_file}: {str(e)}")
-                    aetna_per_file = 0
-
-            # Calculate commission sums
+            # Group CCS files by year
+            ccs_by_year = {}
             for file, temp_path in [(f, t) for f, t in temp_files if f.startswith('ccs_')]:
-                try:
-                    df = pd.read_excel(temp_path, dtype=str).fillna('0')
-                    paid_sum = pd.to_numeric(df['paid'], errors='coerce').fillna(0).sum()
-                    commission_sum = paid_sum + aetna_per_file
+                match = re.search(r'(\d{4})(\d{2})(\d{2})', file)
+                if not match:
+                    print(f"Skipping CCS {file}: Invalid date format")
+                    continue
+                year = match.group(1)
+                if year not in ccs_by_year:
+                    ccs_by_year[year] = []
+                ccs_by_year[year].append((file, temp_path))
 
-                    match = re.search(r'(\d{8})', file)
-                    if not match:
-                        continue
-                    date_str = match.group(1)
+            # Process each year separately
+            for year, files in ccs_by_year.items():
+                # Find the latest CCS file for this year
+                latest_ccs_file, latest_ccs_path = max(
+                    files,
+                    key=lambda f: re.search(r'(\d{8})', f[0]).group(1) if re.search(r'(\d{8})', f[0]) else '0',
+                    default=(None, None)
+                )
+                latest_ccs_date = None
+                if latest_ccs_file:
+                    match = re.search(r'(\d{8})', latest_ccs_file)
+                    latest_ccs_date = datetime.strptime(match.group(1), '%Y%m%d').strftime('%Y-%m-%d')
+
+                # Calculate Aetna's YTD paid for this year
+                aetna_ytd_sum = 0
+                if latest_ccs_path:
                     try:
-                        file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
-                    except ValueError:
-                        continue
+                        df_latest = pd.read_excel(latest_ccs_path, dtype=str).fillna('0')
+                        if 'YTD paid' in df_latest.columns:
+                            aetna_ytd_sum = pd.to_numeric(df_latest['YTD paid'], errors='coerce').fillna(0).sum()
+                    except Exception as e:
+                        print(f"Error reading latest CCS file {latest_ccs_file}: {str(e)}")
 
-                    # Update or add analytics_data
-                    for data in analytics_data:
-                        if data['date'] == file_date:
-                            data['commission_sum'] = round(commission_sum, 2)
-                            break
-                    else:
-                        if not snapshot_valid:
+                # Distribute Aetna's YTD paid across CCS files in this year
+                num_ccs_files = len(files)
+                aetna_per_file = aetna_ytd_sum / num_ccs_files if num_ccs_files > 0 else 0
+
+                # Process each CCS file in this year
+                for file, temp_path in files:
+                    try:
+                        df = pd.read_excel(temp_path, dtype=str).fillna('0')
+                        paid_sum = pd.to_numeric(df['paid'], errors='coerce').fillna(0).sum()
+                        commission_sum = paid_sum + aetna_per_file
+
+                        match = re.search(r'(\d{8})', file)
+                        if not match:
+                            print(f"Skipping CCS {file}: Invalid date format")
+                            continue
+                        date_str = match.group(1)
+                        try:
+                            file_date = datetime.strptime(date_str, '%Y%m%d').strftime('%Y-%m-%d')
+                        except ValueError:
+                            print(f"Skipping CCS {file}: Invalid date {date_str}")
+                            continue
+
+                        # Update or add analytics_data
+                        for data in analytics_data:
+                            if data['date'] == file_date:
+                                data['commission_sum'] = round(commission_sum, 2)
+                                break
+                        else:
                             analytics_data.append({
                                 'date': file_date,
                                 'client_count': 0,
                                 'filename': file,
                                 'commission_sum': round(commission_sum, 2)
                             })
-                except Exception as e:
-                    print(f"Error reading CCS file {file}: {str(e)}")
-                    continue
+                    except Exception as e:
+                        print(f"Error reading CCS file {file}: {str(e)}")
+                        continue
 
         if len(analytics_data) < 2:
-            print("Insufficient Valid Files",
-                  "At least two valid snapshot or CCS files are required for analytics.")
+            print("Insufficient valid files for analytics.")
             return
 
         # Sort by date
         analytics_data.sort(key=lambda x: x['date'])
 
-        # Calculate retention rates and commission changes
+        # Calculate retention rates (only for snapshot files)
         retention_rates = []
         if snapshot_valid:
-            for i in range(1, len(analytics_data)):
-                prev_data = analytics_data[i-1]
-                curr_data = analytics_data[i]
+            snapshot_data = [d for d in analytics_data if d['filename'].startswith('snapshot_')]
+            for i in range(1, len(snapshot_data)):
+                prev_data = snapshot_data[i-1]
+                curr_data = snapshot_data[i]
                 prev_file = os.path.join(data_dir, f"{prev_data['filename']}.xlsx")
                 curr_file = os.path.join(data_dir, f"{curr_data['filename']}.xlsx")
-
                 try:
                     df_prev = pd.read_excel(prev_file, dtype=str).fillna('')
                     df_curr = pd.read_excel(curr_file, dtype=str).fillna('')
-
                     df_prev['primary_key'] = df_prev['first_name'].str.strip() + df_prev['last_name'].str.strip() + df_prev['dob'].str.strip()
                     df_curr['primary_key'] = df_curr['first_name'].str.strip() + df_curr['last_name'].str.strip() + df_curr['dob'].str.strip()
                     prev_clients = set(df_prev['primary_key'])
                     curr_clients = set(df_curr['primary_key'])
                     retained = len(prev_clients & curr_clients)
                     retention_rate = (retained / len(prev_clients)) * 100 if len(prev_clients) > 0 else 0
-
                     retention_rates.append({
                         'period': f"{prev_data['date']} to {curr_data['date']}",
-                        'retention_rate': round(retention_rate, 2)
+                        'retention_rate': round(retention_rate, 2),
+                        'month': prev_data['date'][:7],  # YYYY-MM for aggregation
+                        'end_date': curr_data['date']  # For chart alignment
                     })
                 except Exception as e:
-                    print("Error", f"Error comparing {prev_data['filename']} and {curr_data['filename']}: {str(e)}")
+                    print(f"Error comparing snapshot {prev_data['filename']} and {curr_data['filename']}: {str(e)}")
                     continue
 
+        # Calculate commission changes
+        commission_changes = []
         if ccs_valid:
-            for i in range(1, len(analytics_data)):
-                prev_data = analytics_data[i-1]
-                curr_data = analytics_data[i]
+            valid_comm_data = [d for d in analytics_data if d['commission_sum'] is not None]
+            for i in range(1, len(valid_comm_data)):
+                prev_data = valid_comm_data[i-1]
+                curr_data = valid_comm_data[i]
                 prev_comm = prev_data['commission_sum']
                 curr_comm = curr_data['commission_sum']
                 commission_change = ((curr_comm - prev_comm) / prev_comm * 100) if prev_comm > 0 else 0
                 commission_changes.append({
                     'period': f"{prev_data['date']} to {curr_data['date']}",
-                    'commission_change': round(commission_change, 2)
+                    'commission_change': round(commission_change, 2),
+                    'month': prev_data['date'][:7],  # YYYY-MM for aggregation
+                    'end_date': curr_data['date']  # For chart alignment
                 })
 
+        # Detect outliers in commission changes (z-scores)
+        outliers = []
+        if commission_changes:
+            commission_values = [c['commission_change'] for c in commission_changes]
+            mean_comm = sum(commission_values) / len(commission_values) if commission_values else 0
+            std_comm = (sum((x - mean_comm) ** 2 for x in commission_values) / len(commission_values)) ** 0.5 if commission_values else 0
+            for c in commission_changes:
+                z_score = abs(c['commission_change'] - mean_comm) / std_comm if std_comm > 0 else 0
+                if z_score > 2:  # Threshold for outliers
+                    outliers.append({
+                        'period': c['period'],
+                        'commission_change': c['commission_change'],
+                        'z_score': round(z_score, 2)
+                    })
+
         if not (retention_rates or commission_changes):
-            print("Error", "No retention rates or commission changes could be calculated.")
+            print("No retention rates or commission changes could be calculated.")
             return
+
+        # Calculate Pearson correlation using paired periods
+        pearson_corr = None
+        pearson_message = ""
+        if snapshot_valid and ccs_valid and retention_rates and commission_changes:
+            # Pair retention rates and commission changes by closest end_date
+            paired_data = []
+            for r in retention_rates:
+                r_date = r['end_date']
+                # Find the closest commission change by end_date
+                closest_comm = min(
+                    commission_changes,
+                    key=lambda c: abs((datetime.strptime(c['end_date'], '%Y-%m-%d') - 
+                                      datetime.strptime(r_date, '%Y-%m-%d')).days),
+                    default=None
+                )
+                if closest_comm:
+                    paired_data.append((r['retention_rate'], closest_comm['commission_change']))
+            
+            if len(paired_data) >= 2:
+                retention_values, commission_values = zip(*paired_data)
+                # Check for constant values
+                if len(set(retention_values)) == 1 or len(set(commission_values)) == 1:
+                    pearson_message = "Correlation undefined due to constant values"
+                else:
+                    try:
+                        pearson_corr, _ = pearsonr(retention_values, commission_values)
+                    except Exception as e:
+                        print(f"Error calculating Pearson correlation: {str(e)}")
+                        pearson_message = f"Correlation calculation failed: {str(e)}"
 
         # Calculate averages
         avg_retention = round(sum(r['retention_rate'] for r in retention_rates) / len(retention_rates), 2) if retention_rates else 0
         avg_commission_change = round(sum(c['commission_change'] for c in commission_changes) / len(commission_changes), 2) if commission_changes else 0
-
-        # Calculate Pearson correlation coefficient if both datasets are available
-        pearson_corr = None
-        if snapshot_valid and ccs_valid and len(retention_rates) > 1 and len(commission_changes) > 1:
-            retention_values = [r['retention_rate'] for r in retention_rates]
-            commission_values = [c['commission_change'] for c in commission_changes]
-        try:
-            pearson_corr, _ = pearsonr(retention_values, commission_values)
-        except Exception as e:
-            print("Error", f"Error calculating Pearson correlation: {str(e)}")
 
         # Generate HTML output
         title = "Client Retention and Commission Analytics" if snapshot_valid and ccs_valid else \
@@ -667,7 +720,7 @@ def view_analytics():
         }}
         .table-container {{
             width: 90%;
-            max-height: 300px; /* Adjust for 5 rows visibility */
+            max-height: 300px;
             overflow-y: auto;
             margin: 20px auto;
             background-color: #fff;
@@ -692,6 +745,10 @@ def view_analytics():
         }}
         .commission-th {{
             background-color: #800080;
+            color: white;
+        }}
+        .outlier-th {{
+            background-color: #FF4500;
             color: white;
         }}
         tr:nth-child(even) {{
@@ -725,7 +782,7 @@ def view_analytics():
     <div class="summary">
         {"<p>Average All-Time Retention Rate: {}%</p>".format(avg_retention) if snapshot_valid else ""}
         {"<p>Average All-Time Commission Change: {}%</p>".format(avg_commission_change) if ccs_valid else ""}
-        {"<p>Pearson Correlation (Retention vs. Commission Change): {}</p>".format(round(pearson_corr, 2)) if snapshot_valid else "Commission Sums"}</h2>
+        {"<p>Pearson Correlation (Retention vs. Commission Change): {}</p>".format(round(pearson_corr, 2)) if pearson_corr is not None else f"<p>Pearson Correlation: {pearson_message}</p>"}
     </div>
     <div class="table-container">
         <table>
@@ -735,34 +792,83 @@ def view_analytics():
                 {"<th class='commission-th'>Commission Sum ($)</th><th class='commission-th'>Commission Change (%)</th>" if ccs_valid else ""}
             </tr>
 """
-        for i, data in enumerate(analytics_data):
-            retention = retention_rates[i-1]['retention_rate'] if snapshot_valid and i > 0 else '-'
-            commission_change = commission_changes[i-1]['commission_change'] if ccs_valid and i > 0 else '-'
+        # Match retention and commission changes by end_date
+        retention_dict = {r['end_date']: r['retention_rate'] for r in retention_rates}
+        commission_dict = {c['end_date']: c['commission_change'] for c in commission_changes}
+        for data in analytics_data:
+            curr_date = data['date']
+            retention = retention_dict.get(curr_date, '-')
+            commission_change = commission_dict.get(curr_date, '-')
+            commission_sum = data['commission_sum'] if data['commission_sum'] is not None else 'N/A'
             html_content += f"""
             <tr>
                 <td>{data['date']}</td>
                 {"<td>{}</td><td>{}</td>".format(data['client_count'], retention) if snapshot_valid else ""}
-                {"<td>{}</td><td>{}</td>".format(data['commission_sum'], commission_change) if ccs_valid else ""}
+                {"<td>{}</td><td>{}</td>".format(commission_sum, commission_change) if ccs_valid else ""}
             </tr>
 """
         html_content += """
         </table>
     </div>
+"""
+        # Add outliers table
+        if outliers:
+            html_content += """
+    <h2>Suspicious Commission Fluctuations</h2>
+    <div class="table-container">
+        <table>
+            <tr>
+                <th class="outlier-th">Period</th>
+                <th class="outlier-th">Commission Change (%)</th>
+                <th class="outlier-th">Z-Score</th>
+            </tr>
+"""
+            for outlier in outliers:
+                html_content += f"""
+            <tr>
+                <td>{outlier['period']}</td>
+                <td>{outlier['commission_change']}</td>
+                <td>{outlier['z_score']}</td>
+            </tr>
+"""
+            html_content += """
+        </table>
+    </div>
+"""
+
+        # Prepare chart data with single y-axis
+        retention_labels = [r['end_date'] for r in retention_rates]
+        commission_labels = [c['end_date'] for c in commission_changes]
+        all_labels = sorted(set(retention_labels + commission_labels))
+        
+        retention_data = []
+        for label in all_labels:
+            retention_data.append(
+                next((r['retention_rate'] for r in retention_rates if r['end_date'] == label), None)
+            )
+        
+        commission_data = []
+        for label in all_labels:
+            commission_data.append(
+                next((c['commission_change'] for c in commission_changes if c['end_date'] == label), None)
+            )
+
+        html_content += """
     <h2>Analytics Chart</h2>
-    <div class = "chart-container">
-    <canvas id="analyticsChart"></canvas>
+    <div class="chart-container">
+        <canvas id="analyticsChart"></canvas>
     </div>
     <script>
         const ctx = document.getElementById('analyticsChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['""" + "', '".join(data['date'] for data in analytics_data[1:]) + """'],
+                labels: ['""" + "', '".join(all_labels) + """'],
                 datasets: [""" + \
                 ("""
                     {
                         label: 'Retention Rate (%)',
-                        data: [""" + ", ".join(str(r['retention_rate']) for r in retention_rates) + """],
+                        data: [""" + ", ".join(str(x) if x is not None else 'null' for x in retention_data) + """],
                         borderColor: '#4CAF50',
                         backgroundColor: 'rgba(76, 175, 80, 0.2)',
                         fill: true,
@@ -772,12 +878,12 @@ def view_analytics():
                 ("""
                     {
                         label: 'Commission Change (%)',
-                        data: [""" + ", ".join(str(c['commission_change']) for c in commission_changes) + """],
+                        data: [""" + ", ".join(str(x) if x is not None else 'null' for x in commission_data) + """],
                         borderColor: '#800080',
                         backgroundColor: 'rgba(128, 0, 128, 0.2)',
                         fill: true,
                         tension: 0.3
-                    }""" if ccs_valid else "") + """
+                    }""" if commission_changes else "") + """
                 ]
             },
             options: {
@@ -785,11 +891,13 @@ def view_analytics():
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        beginAtZero: false,
+                        type: 'linear',
+                        display: true,
                         title: {
                             display: true,
-                            text: 'Percentage'
-                        }
+                            text: 'Percentage (%)'
+                        },
+                        beginAtZero: false
                     },
                     x: {
                         title: {
@@ -802,6 +910,20 @@ def view_analytics():
                     legend: {
                         display: true,
                         position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '%';
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
@@ -811,7 +933,8 @@ def view_analytics():
 </html>
 """
 
-        output_dir = os.path.join(os.getcwd(), 'Reports')
+        # Output to Reports subfolder in Program Data
+        output_dir = os.path.join(data_dir, 'Reports')
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         html_path = os.path.join(output_dir, 'analytics.html')
@@ -821,16 +944,16 @@ def view_analytics():
         webbrowser.open('file://' + os.path.realpath(html_path))
 
     except Exception as e:
-        print("Error", f"Error generating analytics: {str(e)}")
+        print(f"Error generating analytics: {str(e)}")
     finally:
-        for file, temp_path in temp_files:
+        for file, temp_file in temp_files:
             original_path = os.path.join(data_dir, file)
             try:
-                if os.path.exists(temp_path):
-                    os.rename(temp_path, original_path)
+                if os.path.exists(temp_file):
+                    os.rename(temp_file, original_path)
             except Exception as e:
-                print("Error", f"Error restoring filename for {file}: {str(e)}")
-
+                print(f"Error restoring filename for {file}: {str(e)}")
+                
 # --- GENERATE CCS -------------------------------------------------------------------------------------------------
 
 # UHC: Jarvis -> Commissions(Statements and More) -> Download
